@@ -5,8 +5,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { API_ENDPOINTS } from "../config/api.js";
 import { apiRequest } from "../services/apiClient.js";
 import { getSocket } from "../services/socket.js";
-import { ChatFeed } from "../components/ChatFeed/ChatFeed.jsx";
-import { MessageInput } from "../components/MessageInput/MessageInput.jsx";
+import { ChatFeed } from "../Components/ChatFeed/ChatFeed.jsx";
+import { MessageInput } from "../Components/MessageInput/MessageInput.jsx";
 import { useScrollToBottom } from "../hooks/useScroll.js";
 import { useTypingIndicator } from "../hooks/useTypingIndicator.js";
 
