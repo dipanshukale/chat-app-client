@@ -157,7 +157,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-[100dvh] flex-col">
+    <div className="flex min-h-[100dvh] flex-col">
       <div className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(var(--panel)/0.45)] backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
           <button

@@ -22,6 +22,11 @@ export const MessageBubble = memo(function MessageBubble({
   isOwn,
   showMeta = true,
 }) {
+  const imageSrc = useMemo(
+    () => message?.image || message?.imageUrl || message?.fileUrl || message?.url,
+    [message]
+  );
+
   const time = useMemo(
     () => formatTime(message?.createdAt || message?.timestamp || message?.time),
     [message]
@@ -48,10 +53,10 @@ export const MessageBubble = memo(function MessageBubble({
         transition={{ type: "spring", stiffness: 520, damping: 36, mass: 0.55 }}
         className="flex flex-col"
       >
-        {message?.image ? (
+        {imageSrc ? (
           <div className={`${bubbleBase} ${isOwn ? ownBubble : theirBubble} p-2`}>
             <img
-              src={message.image}
+              src={imageSrc}
               alt="Sent"
               className="max-h-[320px] w-full rounded-xl object-cover"
               loading="lazy"
@@ -65,7 +70,7 @@ export const MessageBubble = memo(function MessageBubble({
           </div>
         ) : (
           <div className={`${bubbleBase} ${isOwn ? ownBubble : theirBubble}`}>
-            <div className="whitespace-pre-wrap break-words">{message?.message}</div>
+            <div className="whitespace-pre-line break-words">{message?.message}</div>
             {showMeta && (time || isOwn) ? (
               <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/70">
                 {time ? <span>{time}</span> : null}

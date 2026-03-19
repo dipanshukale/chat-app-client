@@ -31,7 +31,7 @@ export function ChatFeed({
             <motion.div
               initial={false}
               animate={{ opacity: 1 }}
-              className="mx-auto flex w-full max-w-3xl flex-col"
+              className="mx-auto flex w-full flex-col"
             >
               {messages.map((msg, index) => (
                 <MessageBubble
@@ -44,7 +44,7 @@ export function ChatFeed({
           </AnimatePresence>
         ) : (
           emptyState ?? (
-            <div className="mx-auto flex h-full w-full max-w-3xl items-center justify-center">
+            <div className="mx-auto flex h-full w-full items-center justify-center">
               <div className="rounded-2xl border border-white/10 bg-[rgba(var(--panel)/0.6)] px-5 py-4 text-center backdrop-blur">
                 <div className="text-sm font-medium text-[rgb(var(--text))]">No messages yet</div>
                 <div className="mt-1 text-xs text-[rgb(var(--muted))]">

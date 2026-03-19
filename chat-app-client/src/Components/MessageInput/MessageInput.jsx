@@ -37,7 +37,7 @@ export const MessageInput = memo(function MessageInput({
 
   return (
     <div className="border-t border-white/10 bg-[rgba(var(--panel)/0.35)] backdrop-blur-xl">
-      <div className="mx-auto w-full max-w-3xl px-3 pb-3 pt-2 md:px-5">
+      <div className="mx-auto w-full px-3 pb-3 pt-2 md:px-5">
         {previewUrl ? (
           <div className="mb-2 inline-flex items-start gap-2 rounded-2xl border border-white/10 bg-[rgba(var(--panel)/0.6)] p-2">
             <img src={previewUrl} alt="Preview" className="h-20 w-20 rounded-xl object-cover" />
