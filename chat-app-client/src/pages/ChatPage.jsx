@@ -25,7 +25,7 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
-  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
   const peerId = selectedUser?._id;
@@ -130,37 +130,61 @@ export default function ChatPage() {
     };
   }, []);
 
-  const handlePickImage = (e) => {
+  const handleImageUpload = async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const data = await apiRequest(API_ENDPOINTS.UPLOAD, {
+      method: "POST",
+      body: formData,
+      auth: "none",
+    });
+    return data?.imageUrl || null;
+  };
+
+  const handlePickImage = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPreviewUrl(URL.createObjectURL(file));
-    setImageFile(file);
+    try {
+      const url = await handleImageUpload(file);
+      setImageUrl(url);
+    } catch {
+      setImageUrl(null);
+    }
   };
 
   const removeImage = () => {
     setPreviewUrl(null);
-    setImageFile(null);
+    setImageUrl(null);
   };
 
   const sendMessage = async () => {
     const hasText = Boolean(messageText && messageText.trim().length);
-    const hasImage = Boolean(imageFile);
+    const hasImage = Boolean(imageUrl);
     if (!hasText && !hasImage) return;
     if (!selfId || !peerId) return;
+
+    console.log("Sending message with:", { messageText, imageUrl });
 
     const formData = new FormData();
     formData.append("senderId", selfId);
     formData.append("receiverId", peerId);
     if (hasText) formData.append("message", messageText.trim());
-    if (hasImage) formData.append("image", imageFile);
+    if (hasImage) formData.append("image", imageUrl);
 
     try {
       const savedMessage = await apiRequest(API_ENDPOINTS.SEND_MESSAGE, {
         method: "POST",
         body: formData,
       });
-      // Immediately update UI with the saved message (text + image)
-      setMessages((prev) => [...prev, savedMessage]);
+
+      console.log("Send response:", savedMessage);
+
+      // Optimistically append the newly-sent message so it appears instantly.
+      if (savedMessage) {
+        setMessages((prev) => [...prev, savedMessage]);
+      }
+
       socket.emit("sendMessage", savedMessage);
       emitStopTyping();
     } catch {
@@ -228,7 +252,7 @@ export default function ChatPage() {
       <ChatFeed
         userId={selfId}
         messages={messages}
-        scrollRef={chatRef}
+        chatRef={chatRef}
         onScroll={onScroll}
         autoStickToBottom={shouldStickToBottom}
         scrollToBottom={scrollToBottom}
