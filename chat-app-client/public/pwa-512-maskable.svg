@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Maskable icons should keep critical content inside the safe zone -->
+  <defs>
+    <radialGradient id="g1" cx="30%" cy="25%" r="90%">
+      <stop offset="0%" stop-color="#7ee7ff" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#c681ff" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#0A0C14" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7ee7ff"/>
+      <stop offset="100%" stop-color="#c681ff"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="512" height="512" rx="0" fill="url(#g1)"/>
+
+  <!-- Safe zone content centered ~70% -->
+  <g transform="translate(76 84)">
+    <rect x="0" y="0" width="360" height="360" rx="96" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.20)" stroke-width="6"/>
+    <path d="M80 110c0-20 16-36 36-36h128c20 0 36 16 36 36v78c0 20-16 36-36 36h-76l-40 40v-40h-12c-20 0-36-16-36-36v-78z"
+          fill="rgba(0,0,0,0.08)" stroke="rgba(255,255,255,0.22)" stroke-width="6"/>
+    <path d="M112 146h144" stroke="url(#g2)" stroke-width="16" stroke-linecap="round" opacity="0.95"/>
+    <path d="M112 196h110" stroke="url(#g2)" stroke-width="16" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="270" cy="196" r="16" fill="url(#g2)" opacity="0.9"/>
+  </g>
+</svg>

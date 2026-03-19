@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg0: 10 12 20;
+    --bg1: 8 10 16;
+    --panel: 16 20 34;
+    --panel2: 10 14 24;
+    --text: 236 242 255;
+    --muted: 161 174 204;
+
+    --primary: 126 231 255; /* cyan */
+    --accent: 198 129 255; /* violet */
+    --danger: 255 90 122;
+
+    --ring: 126 231 255;
+  }
+
+  [data-theme="light"] {
+    --bg0: 246 248 255;
+    --bg1: 235 240 255;
+    --panel: 255 255 255;
+    --panel2: 246 248 255;
+    --text: 18 22 34;
+    --muted: 84 95 125;
+
+    --primary: 0 160 197;
+    --accent: 142 89 255;
+    --danger: 232 67 103;
+
+    --ring: 0 160 197;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    color: rgb(var(--text));
+    background:
+      radial-gradient(1200px 800px at 10% 10%, rgba(var(--accent) / 0.18), transparent 60%),
+      radial-gradient(1000px 700px at 90% 25%, rgba(var(--primary) / 0.16), transparent 55%),
+      radial-gradient(1200px 900px at 55% 120%, rgba(var(--primary) / 0.10), transparent 55%),
+      linear-gradient(180deg, rgb(var(--bg0)), rgb(var(--bg1)));
+    transition: background-color 400ms ease, color 300ms ease;
+  }
+
+  /* Smooth theme transitions without impacting layout */
+  * {
+    transition-property: color, background-color, border-color, outline-color, fill, stroke, box-shadow;
+    transition-duration: 250ms;
+    transition-timing-function: ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+
+
+
+@media screen and (max-width: 768px) {
+    .chat-input {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: rgb(var(--bg0)) !important;
+        padding: 10px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+}
