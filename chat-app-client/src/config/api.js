@@ -1,5 +1,5 @@
 // API Configuration
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chatapp-backend-46f1.onrender.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://chat-app-v1-9ueb.onrender.com';
 
 // API Endpoints
 export const API_ENDPOINTS = {
