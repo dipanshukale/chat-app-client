@@ -25,7 +25,7 @@ export default function ChatPage() {
 
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
-  const [imageUrl, setImageUrl] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
   const peerId = selectedUser?._id;
@@ -130,37 +130,21 @@ export default function ChatPage() {
     };
   }, []);
 
-  const handleImageUpload = async (file) => {
-    const formData = new FormData();
-    formData.append("image", file);
-    const data = await apiRequest(API_ENDPOINTS.UPLOAD, {
-      method: "POST",
-      body: formData,
-      auth: "none",
-    });
-    return data?.imageUrl || null;
-  };
-
-  const handlePickImage = async (e) => {
+  const handlePickImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setPreviewUrl(URL.createObjectURL(file));
-    try {
-      const url = await handleImageUpload(file);
-      setImageUrl(url);
-    } catch {
-      setImageUrl(null);
-    }
+    setImageFile(file);
   };
 
   const removeImage = () => {
     setPreviewUrl(null);
-    setImageUrl(null);
+    setImageFile(null);
   };
 
   const sendMessage = async () => {
     const hasText = Boolean(messageText && messageText.trim().length);
-    const hasImage = Boolean(imageUrl);
+    const hasImage = Boolean(imageFile);
     if (!hasText && !hasImage) return;
     if (!selfId || !peerId) return;
 
@@ -168,13 +152,15 @@ export default function ChatPage() {
     formData.append("senderId", selfId);
     formData.append("receiverId", peerId);
     if (hasText) formData.append("message", messageText.trim());
-    if (hasImage) formData.append("image", imageUrl);
+    if (hasImage) formData.append("image", imageFile);
 
     try {
       const savedMessage = await apiRequest(API_ENDPOINTS.SEND_MESSAGE, {
         method: "POST",
         body: formData,
       });
+      // Immediately update UI with the saved message (text + image)
+      setMessages((prev) => [...prev, savedMessage]);
       socket.emit("sendMessage", savedMessage);
       emitStopTyping();
     } catch {
@@ -242,7 +228,7 @@ export default function ChatPage() {
       <ChatFeed
         userId={selfId}
         messages={messages}
-        chatRef={chatRef}
+        scrollRef={chatRef}
         onScroll={onScroll}
         autoStickToBottom={shouldStickToBottom}
         scrollToBottom={scrollToBottom}
