@@ -7,7 +7,7 @@ import { SeenStatus } from "../SeenStatus/SeenStatus.jsx";
 export function ChatFeed({
   userId,
   messages,
-  chatRef,
+  scrollRef,
   onScroll,
   autoStickToBottom,
   scrollToBottom,
@@ -23,13 +23,10 @@ export function ChatFeed({
 
   const lastOwnMessageStatus = useMemo(() => {
     if (!messages?.length || !userId) return null;
-    const own = [...messages]
-      .reverse()
-      .find((m) => (m?.senderId || m?.sender) === userId);
+    const own = [...messages].reverse().find((m) => m?.sender === userId);
     if (!own) return null;
-    if (own.isSeen || own.seen || own.isRead) return "seen";
-    if (own.isDelivered || own.delivered) return "delivered";
-    return "sent";
+    if (own.seen || own.isRead) return "seen";
+    return "delivered";
   }, [messages, userId]);
 
   const handleImageClick = (src) => {
@@ -41,35 +38,32 @@ export function ChatFeed({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
-        ref={chatRef}
+        ref={scrollRef}
         onScroll={onScroll}
-        className={[
-          "relative",
-          "min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]",
-          "px-3 pb-4 pt-3 md:px-5",
-          "bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]",
-        ].join(" ")}
+        className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3 [scrollbar-gutter:stable] md:px-5"
         style={{ scrollBehavior: "smooth" }}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/45 to-transparent" />
         {messages?.length ? (
           <AnimatePresence initial={false}>
             <motion.div
               initial={false}
               animate={{ opacity: 1 }}
-              className="mx-auto flex w-full flex-col pb-2"
+              className="mx-auto flex w-full flex-col"
             >
-              {messages.map((msg, index) => (
-                <MessageBubble
-                  key={msg?._id || `${msg?.sender}-${msg?.receiver}-${index}`}
-                  message={msg}
-                  isOwn={msg?.sender === userId}
-                  groupedWithPrev={
-                    index > 0 && messages[index - 1]?.sender === msg?.sender
-                  }
-                  onImageClick={handleImageClick}
-                />
-              ))}
+              {messages.map((msg, index) => {
+                console.log("Incoming message:", msg);
+                return (
+                  <MessageBubble
+                    key={msg?._id || `${msg?.sender}-${msg?.receiver}-${index}`}
+                    message={msg}
+                    isOwn={msg?.sender === userId}
+                    groupedWithPrev={
+                      index > 0 && messages[index - 1]?.sender === msg?.sender
+                    }
+                    onImageClick={handleImageClick}
+                  />
+                );
+              })}
             </motion.div>
           </AnimatePresence>
         ) : (

@@ -24,12 +24,16 @@ export const MessageBubble = memo(function MessageBubble({
   onImageClick,
   showMeta = true,
 }) {
+  console.log("Incoming message:", message);
+
   const time = useMemo(
     () => formatTime(message?.createdAt || message?.timestamp || message?.time),
     [message]
   );
 
   const status = message?.seen ? "seen" : message?.delivered ? "delivered" : "sent";
+
+  const imageSrc = message?.image || message?.imageUrl || message?.file;
 
   const bubbleBase =
     "max-w-[78%] md:max-w-[64%] px-3.5 py-2.5 text-sm leading-relaxed ring-1";
@@ -48,8 +52,8 @@ export const MessageBubble = memo(function MessageBubble({
       ? "rounded-3xl rounded-tr-xl"
       : "rounded-3xl"
     : groupedWithPrev
-      ? "rounded-3xl rounded-tl-xl"
-      : "rounded-3xl";
+    ? "rounded-3xl rounded-tl-xl"
+    : "rounded-3xl";
 
   return (
     <div className={`flex ${wrapper} ${spacing}`}>
@@ -59,49 +63,47 @@ export const MessageBubble = memo(function MessageBubble({
         transition={{ type: "spring", stiffness: 520, damping: 36, mass: 0.55 }}
         className="flex flex-col"
       >
-        {message?.image ? (
-          <div className={`${bubbleBase} ${radius} ${isOwn ? ownBubble : theirBubble} p-2`}>
-            <button
-              type="button"
-              onClick={() => onImageClick?.(message.image)}
-              className="block w-full overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Open image"
+        <div className={`${bubbleBase} ${radius} ${isOwn ? ownBubble : theirBubble}`}>
+          <div className="flex flex-col gap-1">
+            {imageSrc && (
+              <button
+                type="button"
+                onClick={() => onImageClick?.(imageSrc)}
+                className="block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                aria-label="Open image"
+              >
+                <div className="mt-1">
+                  <img
+                    src={imageSrc}
+                    alt="chat"
+                    className="rounded-xl max-w-[240px] w-full h-auto object-cover"
+                    loading="lazy"
+                    onError={(e) => {
+                      console.error("Image failed:", imageSrc);
+                      e.target.style.display = "none";
+                    }}
+                  />
+                </div>
+              </button>
+            )}
+
+            {message?.message && (
+              <div className="whitespace-pre-wrap break-words">{message.message}</div>
+            )}
+          </div>
+
+          {showMeta && (time || isOwn) ? (
+            <div
+              className={[
+                "mt-1 flex items-center justify-end gap-1 text-[10px]",
+                isOwn ? "text-white/75" : "text-white/60",
+              ].join(" ")}
             >
-              <img
-                src={message.image}
-                alt="Sent"
-                className="max-h-[340px] w-full rounded-2xl object-cover"
-                loading="lazy"
-              />
-            </button>
-            {showMeta && (time || isOwn) ? (
-              <div
-                className={[
-                  "mt-1 flex items-center justify-end gap-1 text-[10px]",
-                  isOwn ? "text-white/75" : "text-white/60",
-                ].join(" ")}
-              >
-                {time ? <span>{time}</span> : null}
-                {isOwn ? <DeliveryTicks status={status} /> : null}
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <div className={`${bubbleBase} ${radius} ${isOwn ? ownBubble : theirBubble}`}>
-            <div className="whitespace-pre-wrap break-words">{message?.message}</div>
-            {showMeta && (time || isOwn) ? (
-              <div
-                className={[
-                  "mt-1 flex items-center justify-end gap-1 text-[10px]",
-                  isOwn ? "text-white/75" : "text-white/60",
-                ].join(" ")}
-              >
-                {time ? <span>{time}</span> : null}
-                {isOwn ? <DeliveryTicks status={status} /> : null}
-              </div>
-            ) : null}
-          </div>
-        )}
+              {time ? <span>{time}</span> : null}
+              {isOwn ? <DeliveryTicks status={status} /> : null}
+            </div>
+          ) : null}
+        </div>
       </motion.div>
     </div>
   );
