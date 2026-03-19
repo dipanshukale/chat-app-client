@@ -7,7 +7,7 @@ import { SeenStatus } from "../SeenStatus/SeenStatus.jsx";
 export function ChatFeed({
   userId,
   messages,
-  scrollRef,
+  chatRef,
   onScroll,
   autoStickToBottom,
   scrollToBottom,
@@ -41,17 +41,23 @@ export function ChatFeed({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
-        ref={scrollRef}
+        ref={chatRef}
         onScroll={onScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3 [scrollbar-gutter:stable] md:px-5"
+        className={[
+          "relative",
+          "min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]",
+          "px-3 pb-4 pt-3 md:px-5",
+          "bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a]",
+        ].join(" ")}
         style={{ scrollBehavior: "smooth" }}
       >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/45 to-transparent" />
         {messages?.length ? (
           <AnimatePresence initial={false}>
             <motion.div
               initial={false}
               animate={{ opacity: 1 }}
-              className="mx-auto flex w-full flex-col"
+              className="mx-auto flex w-full flex-col pb-2"
             >
               {messages.map((msg, index) => (
                 <MessageBubble

@@ -12,104 +12,90 @@ function formatTime(ts) {
 function DeliveryTicks({ status }) {
   // status can be: "sent" | "delivered" | "seen" (best-effort)
   if (!status) return null;
-
-  if (status === "seen") {
-    // WhatsApp-style: blue double check
-    return (
-      <span className="inline-flex items-center gap-0.5 text-[rgb(var(--primary))]">
-        <FiCheck className="relative z-10" />
-        <FiCheck className="-ml-2" />
-      </span>
-    );
-  }
-
-  if (status === "delivered") {
-    // Double gray checks
-    return (
-      <span className="inline-flex items-center gap-0.5 text-white/80">
-        <FiCheck className="relative z-10" />
-        <FiCheck className="-ml-2 opacity-80" />
-      </span>
-    );
-  }
-
-  // Single gray check for "sent"
+  if (status === "seen") return <FiCheckCircle className="opacity-90" />;
+  if (status === "delivered") return <FiCheck className="opacity-90" />;
   return <FiCheck className="opacity-60" />;
 }
 
 export const MessageBubble = memo(function MessageBubble({
   message,
   isOwn,
-  showMeta = true,
+  groupedWithPrev = false,
   onImageClick,
+  showMeta = true,
 }) {
   const time = useMemo(
     () => formatTime(message?.createdAt || message?.timestamp || message?.time),
     [message]
   );
 
-  const status = message?.isSeen || message?.seen || message?.isRead
-    ? "seen"
-    : message?.isDelivered || message?.delivered
-    ? "delivered"
-    : "sent";
+  const status = message?.seen ? "seen" : message?.delivered ? "delivered" : "sent";
 
   const bubbleBase =
-    "max-w-[78%] md:max-w-[64%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ring-1 ring-white/10";
+    "max-w-[78%] md:max-w-[64%] px-3.5 py-2.5 text-sm leading-relaxed ring-1";
 
   const ownBubble =
-    "bg-gradient-to-br from-[rgba(var(--primary)/0.55)] to-[rgba(var(--accent)/0.35)] text-[rgb(var(--text))]";
+    "bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#5B51D8] text-white ring-white/10 shadow-[0_14px_40px_rgba(0,0,0,0.35)]";
 
   const theirBubble =
-    "bg-[rgba(var(--panel)/0.85)] text-[rgb(var(--text))] backdrop-blur";
+    "bg-[rgba(255,255,255,0.08)] text-[rgb(var(--text))] ring-white/10 shadow-[0_14px_40px_rgba(0,0,0,0.30)] backdrop-blur";
 
   const wrapper = isOwn ? "justify-end" : "justify-start";
 
+  const spacing = groupedWithPrev ? "pt-0.5" : "pt-2.5";
+  const radius = isOwn
+    ? groupedWithPrev
+      ? "rounded-3xl rounded-tr-xl"
+      : "rounded-3xl"
+    : groupedWithPrev
+      ? "rounded-3xl rounded-tl-xl"
+      : "rounded-3xl";
+
   return (
-    <div className={`flex ${wrapper} py-1`}>
+    <div className={`flex ${wrapper} ${spacing}`}>
       <motion.div
         initial={{ opacity: 0, y: 10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: "spring", stiffness: 520, damping: 36, mass: 0.55 }}
         className="flex flex-col"
       >
-        {message?.image || message?.imageUrl ? (
-          <div className={`${bubbleBase} ${isOwn ? ownBubble : theirBubble} p-2`}>
-            <img
-              src={
-                message.image && typeof message.image === "string"
-                  ? message.image.startsWith("http") || message.image.startsWith("data:")
-                    ? message.image
-                    : `data:image/jpeg;base64,${message.image}`
-                  : message.imageUrl || ""
-              }
-              alt="chat"
-              className="max-h-[320px] w-full rounded-xl object-cover"
-              loading="lazy"
-              onClick={
-                onImageClick
-                  ? (e) => {
-                      e.stopPropagation();
-                      onImageClick(e.currentTarget.src);
-                    }
-                  : undefined
-              }
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
+        {message?.image ? (
+          <div className={`${bubbleBase} ${radius} ${isOwn ? ownBubble : theirBubble} p-2`}>
+            <button
+              type="button"
+              onClick={() => onImageClick?.(message.image)}
+              className="block w-full overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              aria-label="Open image"
+            >
+              <img
+                src={message.image}
+                alt="Sent"
+                className="max-h-[340px] w-full rounded-2xl object-cover"
+                loading="lazy"
+              />
+            </button>
             {showMeta && (time || isOwn) ? (
-              <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/70">
+              <div
+                className={[
+                  "mt-1 flex items-center justify-end gap-1 text-[10px]",
+                  isOwn ? "text-white/75" : "text-white/60",
+                ].join(" ")}
+              >
                 {time ? <span>{time}</span> : null}
                 {isOwn ? <DeliveryTicks status={status} /> : null}
               </div>
             ) : null}
           </div>
         ) : (
-          <div className={`${bubbleBase} ${isOwn ? ownBubble : theirBubble}`}>
+          <div className={`${bubbleBase} ${radius} ${isOwn ? ownBubble : theirBubble}`}>
             <div className="whitespace-pre-wrap break-words">{message?.message}</div>
             {showMeta && (time || isOwn) ? (
-              <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/70">
+              <div
+                className={[
+                  "mt-1 flex items-center justify-end gap-1 text-[10px]",
+                  isOwn ? "text-white/75" : "text-white/60",
+                ].join(" ")}
+              >
                 {time ? <span>{time}</span> : null}
                 {isOwn ? <DeliveryTicks status={status} /> : null}
               </div>

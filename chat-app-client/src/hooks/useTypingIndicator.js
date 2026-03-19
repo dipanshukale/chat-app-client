@@ -15,8 +15,6 @@ export function useTypingIndicator(socket, { room, selfId, peerId, timeoutMs = 1
     };
     const emitStopTyping = () => {
       if (!socket || !room || !selfId || !peerId) return;
-      // Support both snake_case and camelCase stop events for backend compatibility
-      socket.emit("stop_typing", { room, from: selfId, to: peerId });
       socket.emit("stopTyping", { room, from: selfId, to: peerId });
     };
     return { emitTyping, emitStopTyping };
@@ -47,12 +45,10 @@ export function useTypingIndicator(socket, { room, selfId, peerId, timeoutMs = 1
     };
 
     socket.on("typing", onTyping);
-    socket.on("stop_typing", onStopTyping);
     socket.on("stopTyping", onStopTyping);
 
     return () => {
       socket.off("typing", onTyping);
-      socket.off("stop_typing", onStopTyping);
       socket.off("stopTyping", onStopTyping);
       if (stopTimer.current) clearTimeout(stopTimer.current);
     };

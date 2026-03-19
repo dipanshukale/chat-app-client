@@ -37,6 +37,15 @@ export default function ChatPage() {
     thresholdPx: 140,
   });
 
+  const chatRef = scrollRef;
+
+  useEffect(() => {
+    if (!shouldStickToBottom) return;
+    const el = chatRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages, shouldStickToBottom, chatRef]);
+
   const { isPeerTyping, emitTyping, emitStopTyping } = useTypingIndicator(socket, {
     room,
     selfId,
@@ -63,30 +72,7 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const data = await apiRequest(API_ENDPOINTS.MESSAGES(peerId), { method: "GET" });
-
-        const normalized = Array.isArray(data)
-          ? data.map((m) => ({
-              ...m,
-              senderId: m.senderId || m.sender,
-              receiverId: m.receiverId || m.receiver,
-              image: m.image || m.imageUrl || null,
-              isDelivered:
-                typeof m.isDelivered === "boolean"
-                  ? m.isDelivered
-                  : typeof m.delivered === "boolean"
-                  ? m.delivered
-                  : true,
-              isSeen:
-                typeof m.isSeen === "boolean"
-                  ? m.isSeen
-                  : typeof m.seen === "boolean"
-                  ? m.seen
-                  : !!m.isRead,
-              createdAt: m.createdAt || m.timestamp || m.time || m.created_at,
-            }))
-          : [];
-
-        setMessages(normalized);
+        setMessages(Array.isArray(data) ? data : []);
         await apiRequest(API_ENDPOINTS.MARK_AS_READ(peerId), { method: "PUT" });
         if (room && selfId && peerId) {
           socket.emit("message_seen", { room, from: selfId, to: peerId });
@@ -101,74 +87,17 @@ export default function ChatPage() {
   }, [user, peerId, room, scrollToBottom]);
 
   useEffect(() => {
-    const handleIncomingMessage = (incoming) => {
-      if (!incoming) return;
+    const onNewMessage = (newMessage) => {
+      // Keep previous behavior: append everything server sends.
+      setMessages((prev) => [...prev, newMessage]);
 
-      const normalized = {
-        ...incoming,
-        senderId: incoming.senderId || incoming.sender,
-        receiverId: incoming.receiverId || incoming.receiver,
-        image: incoming.image || incoming.imageUrl || null,
-        isDelivered:
-          typeof incoming.isDelivered === "boolean"
-            ? incoming.isDelivered
-            : typeof incoming.delivered === "boolean"
-            ? incoming.delivered
-            : incoming.receiverId === selfId,
-        isSeen:
-          typeof incoming.isSeen === "boolean"
-            ? incoming.isSeen
-            : typeof incoming.seen === "boolean"
-            ? incoming.seen
-            : !!incoming.isRead,
-        createdAt:
-          incoming.createdAt || incoming.timestamp || incoming.time || incoming.created_at,
-      };
-
-      setMessages((prev) => [...prev, normalized]);
-
-      // If this user is the receiver and the chat is open, immediately mark as delivered/read + emit seen.
-      const isForMe =
-        (normalized.receiverId || normalized.receiver) === selfId &&
-        (normalized.senderId || normalized.sender) === peerId;
-
-      if (isForMe) {
-        // Notify backend that message is delivered to this device.
-        if (room && selfId && peerId && normalized._id) {
-          socket.emit("message_delivered", {
-            room,
-            messageId: normalized._id,
-            from: peerId,
-            to: selfId,
-          });
-        }
-
+      // If this user is the receiver and the chat is open, immediately mark as read + emit seen.
+      if (newMessage?.receiver === selfId && newMessage?.sender === peerId) {
         apiRequest(API_ENDPOINTS.MARK_AS_READ(peerId), { method: "PUT" }).catch(() => {});
         if (room && selfId && peerId) {
           socket.emit("message_seen", { room, from: selfId, to: peerId });
         }
       }
-    };
-
-    const onMessageDelivered = (payload) => {
-      if (!payload) return;
-
-      const matchesRoom = payload.room && room && payload.room === room;
-      const matchesPeer =
-        payload.to && selfId && payload.to === selfId && payload.from && peerId && payload.from === peerId;
-
-      if (!matchesRoom && !matchesPeer) return;
-
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.senderId === selfId && m.receiverId === peerId
-            ? {
-                ...m,
-                isDelivered: true,
-              }
-            : m
-        )
-      );
     };
 
     const onMessageSeen = (payload) => {
@@ -181,27 +110,16 @@ export default function ChatPage() {
       // Best-effort: mark all of our messages in this convo as seen.
       setMessages((prev) =>
         prev.map((m) =>
-          m?.senderId === selfId || m?.sender === selfId
-            ? {
-                ...m,
-                isDelivered: true,
-                isSeen: true,
-                seen: true,
-              }
-            : m
+          m?.sender === selfId ? { ...m, seen: m.seen || m.isRead || true } : m
         )
       );
     };
 
-    socket.on("newMessage", handleIncomingMessage);
-    socket.on("receive_message", handleIncomingMessage);
-    socket.on("message_delivered", onMessageDelivered);
+    socket.on("newMessage", onNewMessage);
     socket.on("message_seen", onMessageSeen);
 
     return () => {
-      socket.off("newMessage", handleIncomingMessage);
-      socket.off("receive_message", handleIncomingMessage);
-      socket.off("message_delivered", onMessageDelivered);
+      socket.off("newMessage", onNewMessage);
       socket.off("message_seen", onMessageSeen);
     };
   }, [peerId, room, selfId]);
@@ -257,38 +175,7 @@ export default function ChatPage() {
         method: "POST",
         body: formData,
       });
-
-      const normalized = {
-        ...savedMessage,
-        senderId: savedMessage.senderId || savedMessage.sender || selfId,
-        receiverId: savedMessage.receiverId || savedMessage.receiver || peerId,
-        image: savedMessage.image || savedMessage.imageUrl || imageUrl || null,
-        isDelivered:
-          typeof savedMessage.isDelivered === "boolean"
-            ? savedMessage.isDelivered
-            : typeof savedMessage.delivered === "boolean"
-            ? savedMessage.delivered
-            : false,
-        isSeen:
-          typeof savedMessage.isSeen === "boolean"
-            ? savedMessage.isSeen
-            : typeof savedMessage.seen === "boolean"
-            ? savedMessage.seen
-            : false,
-        createdAt:
-          savedMessage.createdAt ||
-          savedMessage.timestamp ||
-          savedMessage.time ||
-          savedMessage.created_at ||
-          new Date().toISOString(),
-      };
-
-      // Optimistically append our own message to the feed.
-      setMessages((prev) => [...prev, normalized]);
-
-      // Emit both the legacy and the new event name to backend.
-      socket.emit("sendMessage", normalized);
-      socket.emit("send_message", normalized);
+      socket.emit("sendMessage", savedMessage);
       emitStopTyping();
     } catch {
       // no-op
@@ -311,9 +198,10 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col overflow-hidden">
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-[rgba(var(--panel)/0.45)] backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
+    <div className="flex h-screen flex-col overflow-hidden">
+      {/* HEADER */}
+      <div className="h-14 border-b border-white/10 bg-[rgba(var(--panel)/0.45)] backdrop-blur-xl">
+        <div className="mx-auto flex h-full w-full max-w-3xl items-center gap-3 px-4">
           <button
             type="button"
             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-[rgb(var(--text))] hover:bg-white/10 active:scale-95"
@@ -350,27 +238,31 @@ export default function ChatPage() {
         </div>
       </div>
 
+      {/* MESSAGES (SCROLLABLE) */}
       <ChatFeed
         userId={selfId}
         messages={messages}
-        scrollRef={scrollRef}
+        chatRef={chatRef}
         onScroll={onScroll}
         autoStickToBottom={shouldStickToBottom}
         scrollToBottom={scrollToBottom}
         isPeerTyping={isPeerTyping}
       />
 
-      <MessageInput
-        value={messageText}
-        onChange={setMessageText}
-        onSend={sendMessage}
-        onPickImage={handlePickImage}
-        previewUrl={previewUrl}
-        onRemoveImage={removeImage}
-        disabled={!selfId || !peerId}
-        onTyping={notifyTyping}
-        placeholder="Message… (Enter to send, Shift+Enter for new line)"
-      />
+      {/* INPUT (FIXED) */}
+      <div className="border-t border-white/10 bg-[rgba(var(--panel)/0.35)] backdrop-blur-xl">
+        <MessageInput
+          value={messageText}
+          onChange={setMessageText}
+          onSend={sendMessage}
+          onPickImage={handlePickImage}
+          previewUrl={previewUrl}
+          onRemoveImage={removeImage}
+          disabled={!selfId || !peerId}
+          onTyping={notifyTyping}
+          placeholder="Message… (Enter to send, Shift+Enter for new line)"
+        />
+      </div>
     </div>
   );
 }
