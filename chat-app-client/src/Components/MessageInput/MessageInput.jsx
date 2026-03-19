@@ -36,7 +36,7 @@ export const MessageInput = memo(function MessageInput({
   );
 
   return (
-    <div className="border-t border-white/10 bg-[rgba(var(--panel)/0.35)] backdrop-blur-xl">
+    <div className="chat-input sticky bottom-0 z-30 border-t border-white/10 bg-[rgba(var(--panel)/0.35)] backdrop-blur-xl">
       <div className="mx-auto w-full px-3 pb-3 pt-2 md:px-5">
         {previewUrl ? (
           <div className="mb-2 inline-flex items-start gap-2 rounded-2xl border border-white/10 bg-[rgba(var(--panel)/0.6)] p-2">
@@ -70,10 +70,10 @@ export const MessageInput = memo(function MessageInput({
             <FiPlus className="text-lg" />
           </button>
 
-          <div className="flex min-h-11 flex-1 items-end gap-2 rounded-2xl border border-white/10 bg-[rgba(var(--panel)/0.55)] px-3 py-2 shadow-[0_10px_30px_rgba(0,0,0,0.18)] focus-within:ring-2 focus-within:ring-[rgba(var(--ring)/0.45)]">
+          <div className="flex min-h-11 flex-1 items-end gap-2 rounded-full border border-white/10 bg-[rgba(var(--panel)/0.55)] px-3 py-2 shadow-[0_16px_40px_rgba(0,0,0,0.3)] focus-within:ring-2 focus-within:ring-[rgba(var(--ring)/0.55)]">
             <button
               type="button"
-              className="mb-1 inline-flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[rgb(var(--muted))] hover:bg-white/10 hover:text-[rgb(var(--text))]"
+              className="mb-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[rgb(var(--muted))] hover:bg-white/10 hover:text-[rgb(var(--text))]"
               aria-label="Emoji (coming soon)"
               disabled
             >
@@ -97,12 +97,12 @@ export const MessageInput = memo(function MessageInput({
             type="button"
             onClick={onSend}
             disabled={!canSend}
-            whileTap={canSend ? { scale: 0.92 } : undefined}
-            whileHover={canSend ? { scale: 1.02 } : undefined}
+            whileTap={canSend ? { scale: 0.9 } : undefined}
+            whileHover={canSend ? { scale: 1.06 } : undefined}
             className={[
-              "inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 transition",
+              "inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 transition-transform",
               canSend
-                ? "bg-[rgb(var(--primary))] text-black shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+                ? "bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F56040] text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]"
                 : "bg-white/5 text-[rgb(var(--muted))] opacity-60",
             ].join(" ")}
             aria-label="Send message"

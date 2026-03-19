@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageBubble } from "../MessageBubble/MessageBubble.jsx";
 import { TypingIndicator } from "../TypingIndicator/TypingIndicator.jsx";
+import { SeenStatus } from "../SeenStatus/SeenStatus.jsx";
 
 export function ChatFeed({
   userId,
@@ -13,17 +14,36 @@ export function ChatFeed({
   isPeerTyping,
   emptyState,
 }) {
+  const [previewImage, setPreviewImage] = useState(null);
+
   useEffect(() => {
     if (!autoStickToBottom) return;
     scrollToBottom?.("smooth");
   }, [messages?.length, autoStickToBottom, scrollToBottom]);
+
+  const lastOwnMessageStatus = useMemo(() => {
+    if (!messages?.length || !userId) return null;
+    const own = [...messages]
+      .reverse()
+      .find((m) => (m?.senderId || m?.sender) === userId);
+    if (!own) return null;
+    if (own.isSeen || own.seen || own.isRead) return "seen";
+    if (own.isDelivered || own.delivered) return "delivered";
+    return "sent";
+  }, [messages, userId]);
+
+  const handleImageClick = (src) => {
+    setPreviewImage(src);
+  };
+
+  const closePreview = () => setPreviewImage(null);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-3 pb-3 pt-2 [scrollbar-gutter:stable] md:px-5"
+        className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3 [scrollbar-gutter:stable] md:px-5"
         style={{ scrollBehavior: "smooth" }}
       >
         {messages?.length ? (
@@ -38,6 +58,10 @@ export function ChatFeed({
                   key={msg?._id || `${msg?.sender}-${msg?.receiver}-${index}`}
                   message={msg}
                   isOwn={msg?.sender === userId}
+                  groupedWithPrev={
+                    index > 0 && messages[index - 1]?.sender === msg?.sender
+                  }
+                  onImageClick={handleImageClick}
                 />
               ))}
             </motion.div>
@@ -57,6 +81,24 @@ export function ChatFeed({
       </div>
 
       {isPeerTyping ? <TypingIndicator /> : null}
+
+      <SeenStatus status={lastOwnMessageStatus} />
+
+      {previewImage ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          onClick={closePreview}
+        >
+          <motion.img
+            src={previewImage}
+            alt="Preview"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="max-h-[90vh] max-w-[90vw] rounded-3xl object-contain shadow-2xl"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
