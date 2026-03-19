@@ -4,6 +4,7 @@ import { apiRequest } from "../services/apiClient";
 
 const AuthContext = createContext();
 
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
